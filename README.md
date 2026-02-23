@@ -1,2 +1,2 @@
-# clinical-validity
-This project uses natural language processing to determine the validity of published clinical studies. 
+# the-finance-parent
+This project is a mobile app that allows users to track their money and make careful financial decisions.
