@@ -1,5 +1,7 @@
-import { View, Text, ScrollView, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useState } from 'react';
+
+const YOUR_IP = 'localhost'; // Replace with your actual IP
 
 const categories = [
     {
@@ -22,6 +24,28 @@ const categories = [
 
 export default function SwapScreen() {
     const [search, setSearch] = useState('');
+    const [result, setResult] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [searched, setSearched] = useState('');
+
+    const getSubstitutions = async (ingredient: string) => {
+        if (!ingredient.trim()) return;
+        setLoading(true);
+        setResult('');
+        setSearched(ingredient);
+        try {
+            const response = await fetch(`http://${YOUR_IP}:8000/substitutions`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ingredient }),
+            });
+            const data = await response.json();
+            setResult(data.substitutions);
+        } catch (error) {
+            setResult('Could not connect to server. Make sure your backend is running!');
+        }
+        setLoading(false);
+    };
 
     return (
         <ScrollView style={styles.container}>
@@ -44,7 +68,12 @@ export default function SwapScreen() {
                         placeholderTextColor="#aaa"
                         value={search}
                         onChangeText={setSearch}
+                        onSubmitEditing={() => getSubstitutions(search)}
+                        returnKeyType="search"
                     />
+                    <TouchableOpacity onPress={() => getSubstitutions(search)}>
+                        <Text style={styles.goButton}>Go</Text>
+                    </TouchableOpacity>
                 </View>
             </View>
 
@@ -59,26 +88,41 @@ export default function SwapScreen() {
                 </View>
             </View>
 
-            {/* Categories */}
-            {categories.map((category, index) => (
-                <View key={index} style={styles.section}>
-                    <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>{category.name}</Text>
-                        <View style={styles.badge}>
-                            <Text style={styles.badgeText}>{category.items.length}</Text>
-                        </View>
-                    </View>
-                    {category.items.map((item, i) => (
-                        <TouchableOpacity key={i} style={styles.card}>
-                            <View style={styles.cardInfo}>
-                                <Text style={styles.cardName}>{item.name}</Text>
-                                <Text style={styles.cardSubs}>{item.count} substitutes available</Text>
-                            </View>
-                            <Text style={styles.arrow}>→</Text>
-                        </TouchableOpacity>
-                    ))}
+            {/* Loading */}
+            {loading && <ActivityIndicator size="large" color="#f5c400" style={{ marginTop: 20 }} />}
+
+            {/* Results */}
+            {result ? (
+                <View style={styles.resultCard}>
+                    <Text style={styles.resultTitle}>Substitutes for {searched}:</Text>
+                    <Text style={styles.resultText}>{result}</Text>
                 </View>
-            ))}
+            ) : !loading && (
+                <>
+                    {categories.map((category, index) => (
+                        <View key={index} style={styles.section}>
+                            <View style={styles.sectionHeader}>
+                                <Text style={styles.sectionTitle}>{category.name}</Text>
+                                <View style={styles.badge}>
+                                    <Text style={styles.badgeText}>{category.items.length}</Text>
+                                </View>
+                            </View>
+                            {category.items.map((item, i) => (
+                                <TouchableOpacity key={i} style={styles.card} onPress={() => {
+                                    setSearch(item.name);
+                                    getSubstitutions(item.name);
+                                }}>
+                                    <View style={styles.cardInfo}>
+                                        <Text style={styles.cardName}>{item.name}</Text>
+                                        <Text style={styles.cardSubs}>{item.count} substitutes available</Text>
+                                    </View>
+                                    <Text style={styles.arrow}>→</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    ))}
+                </>
+            )}
         </ScrollView>
     );
 }
@@ -93,11 +137,15 @@ const styles = StyleSheet.create({
     searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 12, paddingHorizontal: 12, borderWidth: 1, borderColor: '#e5e7eb' },
     searchIcon: { fontSize: 16, marginRight: 8 },
     input: { flex: 1, paddingVertical: 12, fontSize: 15, color: '#1f2937' },
+    goButton: { fontSize: 15, fontWeight: 'bold', color: '#f5c400', paddingHorizontal: 8 },
     proTip: { marginHorizontal: 16, marginBottom: 16, backgroundColor: '#f3f0ff', borderRadius: 16, padding: 16, flexDirection: 'row', gap: 12, borderWidth: 1, borderColor: '#7c3aed' },
     proTipIcon: { fontSize: 20 },
     proTipText: { flex: 1 },
     proTipTitle: { fontSize: 15, fontWeight: 'bold', color: '#7c3aed', marginBottom: 4 },
     proTipBody: { fontSize: 13, color: '#6b21a8', lineHeight: 18 },
+    resultCard: { marginHorizontal: 16, marginBottom: 16, backgroundColor: '#fff', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#f5c400' },
+    resultTitle: { fontSize: 16, fontWeight: 'bold', color: '#c8960c', marginBottom: 8 },
+    resultText: { fontSize: 14, color: '#1f2937', lineHeight: 22 },
     section: { paddingHorizontal: 16, marginBottom: 8 },
     sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
     sectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#1f2937' },
@@ -107,5 +155,5 @@ const styles = StyleSheet.create({
     cardInfo: { flex: 1 },
     cardName: { fontSize: 16, fontWeight: '600', color: '#1f2937' },
     cardSubs: { fontSize: 13, color: '#6b7280', marginTop: 2 },
-    arrow: { fontSize: 18, color: '#9ca3af' },
+    arrow: { fontSize: 18, color: '#9ca3af' }
 });
