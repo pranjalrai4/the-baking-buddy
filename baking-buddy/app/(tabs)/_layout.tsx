@@ -16,6 +16,7 @@ export default function TabLayout() {
       <Tabs.Screen name="pantry" options={{ title: 'Pantry', headerShown: false, tabBarIcon: () => <Text>🧺</Text> }} />
       <Tabs.Screen name="swap" options={{ title: 'Swap', headerShown: false, tabBarIcon: () => <Text>🔄</Text> }} />
       <Tabs.Screen name="analyze" options={{ title: 'Analyze', headerShown: false, tabBarIcon: () => <Text>📸</Text> }} />
+      <Tabs.Screen name="diary" options={{ title: 'Diary', headerShown: false, tabBarIcon: () => <Text>📓</Text>}} />
     </Tabs>
   );
 }
