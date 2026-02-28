@@ -84,17 +84,17 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f5f0ff' },
-    header: { backgroundColor: '#f5c400', padding: 24, paddingTop: 48, flexDirection: 'row', alignItems: 'center' },
+    container: { flex: 1, backgroundColor: '#fff9c4' },
+    header: { backgroundColor: '#f5c400', padding: 32, paddingTop: 64, flexDirection: 'row', alignItems: 'center' },
     headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
     logo: { backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 50, width: 48, height: 48, justifyContent: 'center', alignItems: 'center' },
     logoIcon: { fontSize: 24 },
     appName: { fontSize: 22, fontWeight: 'bold', color: '#fff' },
-    welcome: { fontSize: 13, color: '#e9d5ff' },
+    welcome: { fontSize: 13, color: '#ffffff' },
     statsRow: { flexDirection: 'row', justifyContent: 'space-between', padding: 16, gap: 8 },
     statCard: { flex: 1, backgroundColor: '#fff', borderRadius: 12, padding: 12, alignItems: 'center', shadowColor: '#7c3aed', shadowOpacity: 0.1, shadowRadius: 8, elevation: 2 },
     statNumber: { fontSize: 24, fontWeight: 'bold', color: '#c8960c' },
-    statLabel: { fontSize: 11, color: '#6b7280', textAlign: 'center', marginTop: 4 },
+    statLabel: { fontSize: 11, color: '#000000', textAlign: 'center', marginTop: 4 },
     tipCard: { margin: 16, marginTop: 0, backgroundColor: '#7c3aed', borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 },
     tipIcon: { fontSize: 28 },
     tipText: { flex: 1 },

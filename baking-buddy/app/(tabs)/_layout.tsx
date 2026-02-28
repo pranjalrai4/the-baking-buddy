@@ -13,9 +13,9 @@ export default function TabLayout() {
         headerTitleStyle: { fontWeight: 'bold' },
       }}>
       <Tabs.Screen name="home" options={{ title: 'Home', headerShown: false, tabBarIcon: () => <Text>🏠</Text> }} />
-      <Tabs.Screen name="pantry" options={{ title: 'Pantry', tabBarIcon: () => <Text>🧺</Text> }} />
-      <Tabs.Screen name="swap" options={{ title: 'Swap', tabBarIcon: () => <Text>🔄</Text> }} />
-      <Tabs.Screen name="analyze" options={{ title: 'Analyze', tabBarIcon: () => <Text>📸</Text> }} />
+      <Tabs.Screen name="pantry" options={{ title: 'Pantry', headerShown: false, tabBarIcon: () => <Text>🧺</Text> }} />
+      <Tabs.Screen name="swap" options={{ title: 'Swap', headerShown: false, tabBarIcon: () => <Text>🔄</Text> }} />
+      <Tabs.Screen name="analyze" options={{ title: 'Analyze', headerShown: false, tabBarIcon: () => <Text>📸</Text> }} />
     </Tabs>
   );
 }
