@@ -1,19 +1,33 @@
 import { View, Text, ScrollView, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
 import { useState } from 'react';
+import { useRouter } from 'expo-router';
+
+const PRESET_INGREDIENTS = [
+    'Flour', 'Eggs', 'Butter', 'Sugar', 'Milk', 'Vanilla Extract',
+    'Baking Powder', 'Baking Soda', 'Salt', 'Cocoa Powder',
+    'Brown Sugar', 'Honey', 'Olive Oil', 'Cream Cheese', 'Yeast'
+];
 
 export default function PantryScreen() {
-    const [ingredients, setIngredients] = useState(['Flour', 'Eggs', 'Butter', 'Sugar', 'Vanilla Extract']);
+    const router = useRouter();
+    const [selected, setSelected] = useState<string[]>(['Flour', 'Eggs', 'Butter', 'Sugar', 'Vanilla Extract']);
     const [input, setInput] = useState('');
+    const [showPresets, setShowPresets] = useState(false);
 
-    const addIngredient = () => {
-        if (input.trim() === '') return;
-        setIngredients([...ingredients, input.trim()]);
+    const addIngredient = (ingredient: string) => {
+        if (!ingredient.trim() || selected.includes(ingredient)) return;
+        setSelected([...selected, ingredient.trim()]);
         setInput('');
+        setShowPresets(false);
     };
 
-    const removeIngredient = (index: number) => {
-        setIngredients(ingredients.filter((_, i) => i !== index));
+    const removeIngredient = (ingredient: string) => {
+        setSelected(selected.filter(i => i !== ingredient));
     };
+
+    const filteredPresets = PRESET_INGREDIENTS.filter(
+        i => i.toLowerCase().includes(input.toLowerCase()) && !selected.includes(i)
+    );
 
     return (
         <ScrollView style={styles.container}>
@@ -27,30 +41,44 @@ export default function PantryScreen() {
             </View>
 
             {/* Search & Add */}
-            <View style={styles.searchRow}>
-                <View style={styles.searchBar}>
-                    <Text style={styles.searchIcon}>🔍</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Search or add ingredient..."
-                        placeholderTextColor="#aaa"
-                        value={input}
-                        onChangeText={setInput}
-                    />
+            <View style={styles.searchSection}>
+                <View style={styles.searchRow}>
+                    <View style={styles.searchBar}>
+                        <Text style={styles.searchIcon}>🔍</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Search or add ingredient..."
+                            placeholderTextColor="#aaa"
+                            value={input}
+                            onChangeText={(text) => { setInput(text); setShowPresets(true); }}
+                            onSubmitEditing={() => addIngredient(input)}
+                        />
+                    </View>
+                    <TouchableOpacity style={styles.addButton} onPress={() => addIngredient(input)}>
+                        <Text style={styles.addButtonText}>+</Text>
+                    </TouchableOpacity>
                 </View>
-                <TouchableOpacity style={styles.addButton} onPress={addIngredient}>
-                    <Text style={styles.addButtonText}>+</Text>
-                </TouchableOpacity>
+
+                {/* Preset Dropdown */}
+                {showPresets && input.length > 0 && filteredPresets.length > 0 && (
+                    <View style={styles.presetsDropdown}>
+                        {filteredPresets.map((item, index) => (
+                            <TouchableOpacity key={index} style={styles.presetItem} onPress={() => addIngredient(item)}>
+                                <Text style={styles.presetText}>{item}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                )}
             </View>
 
-            {/* Ingredient Tags */}
+            {/* Selected Ingredients */}
             <View style={styles.tagsSection}>
-                <Text style={styles.tagsTitle}>In Your Pantry ({ingredients.length})</Text>
+                <Text style={styles.tagsTitle}>In Your Pantry ({selected.length})</Text>
                 <View style={styles.tagsRow}>
-                    {ingredients.map((item, index) => (
+                    {selected.map((item, index) => (
                         <View key={index} style={styles.tag}>
                             <Text style={styles.tagText}>{item}</Text>
-                            <TouchableOpacity onPress={() => removeIngredient(index)}>
+                            <TouchableOpacity onPress={() => removeIngredient(item)}>
                                 <Text style={styles.tagRemove}>×</Text>
                             </TouchableOpacity>
                         </View>
@@ -59,13 +87,17 @@ export default function PantryScreen() {
             </View>
 
             {/* Ready to Bake Banner */}
-            <TouchableOpacity style={styles.banner}>
-                <View>
-                    <Text style={styles.bannerTitle}>Ready to bake?</Text>
-                    <Text style={styles.bannerSubtitle}>See recipes you can make with these ingredients</Text>
-                </View>
-                <Text style={styles.bannerArrow}>→</Text>
-            </TouchableOpacity>
+            {selected.length > 0 && (
+                <TouchableOpacity
+                    style={styles.banner}
+                    onPress={() => router.push({ pathname: '/recipes', params: { ingredients: JSON.stringify(selected) } })}>
+                    <View>
+                        <Text style={styles.bannerTitle}>Ready to bake?</Text>
+                        <Text style={styles.bannerSubtitle}>See recipes you can make with these ingredients</Text>
+                    </View>
+                    <Text style={styles.bannerArrow}>→</Text>
+                </TouchableOpacity>
+            )}
         </ScrollView>
     );
 }
@@ -76,12 +108,16 @@ const styles = StyleSheet.create({
     headerIcon: { fontSize: 32 },
     title: { fontSize: 24, fontWeight: 'bold', color: '#fff' },
     subtitle: { fontSize: 13, color: '#fff3cd', marginTop: 4 },
-    searchRow: { flexDirection: 'row', padding: 16, gap: 10, alignItems: 'center' },
+    searchSection: { padding: 16 },
+    searchRow: { flexDirection: 'row', gap: 10, alignItems: 'center' },
     searchBar: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 12, paddingHorizontal: 12, borderWidth: 1, borderColor: '#e5e7eb' },
     searchIcon: { fontSize: 16, marginRight: 8 },
     input: { flex: 1, paddingVertical: 12, fontSize: 15, color: '#1f2937' },
     addButton: { backgroundColor: '#f5c400', borderRadius: 12, width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
     addButtonText: { fontSize: 24, color: '#fff', fontWeight: 'bold' },
+    presetsDropdown: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#e5e7eb', marginTop: 4 },
+    presetItem: { padding: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
+    presetText: { fontSize: 15, color: '#1f2937' },
     tagsSection: { paddingHorizontal: 16 },
     tagsTitle: { fontSize: 16, fontWeight: 'bold', color: '#1f2937', marginBottom: 12 },
     tagsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },

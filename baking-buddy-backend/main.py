@@ -59,3 +59,45 @@ def get_substitution(request: SubstitutionRequest):
     raw = chat_completion.choices[0].message.content
     clean = raw.replace("```json", "").replace("```", "").strip()
     return json.loads(clean)
+
+class RecipeRequest(BaseModel):
+    ingredients: list[str]
+
+@app.post("/suggest-recipes")
+def suggest_recipes(request: RecipeRequest):
+    ingredients_str = ", ".join(request.ingredients)
+    chat_completion = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[{"role": "user", "content": f"""I have these baking ingredients: {ingredients_str}. 
+        Suggest exactly 5 recipes. Make sure at least 2 recipes use ONLY my ingredients, and at least 1 recipe requires 1-2 additional ingredients I don't have.
+        Respond in this exact JSON format, no other text:
+        {{
+            "recipes": [
+                {{
+                    "name": "Recipe Name",
+                    "description": "one sentence description",
+                    "time": "30 min",
+                    "difficulty": "Easy",
+                    "missing": []
+                }},
+                {{
+                    "name": "Recipe Name",
+                    "description": "one sentence description",
+                    "time": "45 min",
+                    "difficulty": "Medium",
+                    "missing": ["ingredient1"]
+                }},
+                {{
+                    "name": "Recipe Name",
+                    "description": "one sentence description",
+                    "time": "1 hr",
+                    "difficulty": "Hard",
+                    "missing": ["ingredient1", "ingredient2"]
+                }}
+            ]
+        }}"""}]
+    )
+    import json
+    raw = chat_completion.choices[0].message.content
+    clean = raw.replace("```json", "").replace("```", "").strip()
+    return json.loads(clean)
