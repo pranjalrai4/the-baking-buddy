@@ -1,38 +1,40 @@
 import { View, Text, ScrollView, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useState } from 'react';
 
-const YOUR_IP = 'localhost'; // Replace with your actual IP
+const YOUR_IP = '192.168.68.55';
+
+const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 
 const categories = [
-    {
-        name: 'Fats',
-        items: [{ name: 'Butter', count: 3 }],
-    },
-    {
-        name: 'Binding Agents',
-        items: [{ name: 'Eggs', count: 3 }],
-    },
-    {
-        name: 'Flours',
-        items: [{ name: 'All-Purpose Flour', count: 3 }],
-    },
-    {
-        name: 'Sweeteners',
-        items: [{ name: 'Sugar', count: 3 }],
-    },
+    { name: 'Fats', items: [{ name: 'Butter' }] },
+    { name: 'Binding Agents', items: [{ name: 'Eggs' }] },
+    { name: 'Flours', items: [{ name: 'All-Purpose Flour' }] },
+    { name: 'Sweeteners', items: [{ name: 'Sugar' }] },
 ];
+
+type Substitute = {
+    name: string;
+    ratio: string;
+    description: string;
+    best: boolean;
+};
+
+type SubstituteResult = {
+    ingredient: string;
+    substitutes: Substitute[];
+};
 
 export default function SwapScreen() {
     const [search, setSearch] = useState('');
-    const [result, setResult] = useState('');
+    const [result, setResult] = useState<SubstituteResult | null>(null);
     const [loading, setLoading] = useState(false);
-    const [searched, setSearched] = useState('');
+    const [expanded, setExpanded] = useState(true);
 
     const getSubstitutions = async (ingredient: string) => {
         if (!ingredient.trim()) return;
         setLoading(true);
-        setResult('');
-        setSearched(ingredient);
+        setResult(null);
+        setExpanded(false);
         try {
             const response = await fetch(`http://${YOUR_IP}:8000/substitutions`, {
                 method: 'POST',
@@ -40,9 +42,9 @@ export default function SwapScreen() {
                 body: JSON.stringify({ ingredient }),
             });
             const data = await response.json();
-            setResult(data.substitutions);
+            setResult({ ingredient: capitalize(ingredient), substitutes: data.substitutes });
         } catch (error) {
-            setResult('Could not connect to server. Make sure your backend is running!');
+            console.error(error);
         }
         setLoading(false);
     };
@@ -92,12 +94,37 @@ export default function SwapScreen() {
             {loading && <ActivityIndicator size="large" color="#f5c400" style={{ marginTop: 20 }} />}
 
             {/* Results */}
-            {result ? (
-                <View style={styles.resultCard}>
-                    <Text style={styles.resultTitle}>Substitutes for {searched}:</Text>
-                    <Text style={styles.resultText}>{result}</Text>
+            {result && (
+                <View style={styles.section}>
+                    <TouchableOpacity style={[styles.card, expanded && styles.cardExpanded]} onPress={() => setExpanded(!expanded)}>
+                        <View style={styles.cardInfo}>
+                            <Text style={styles.cardName}>{result.ingredient}</Text>
+                            <Text style={styles.cardSubs}>{result.substitutes.length} substitutes available</Text>
+                        </View>
+                        <Text style={styles.arrow}>{expanded ? '↓' : '→'}</Text>
+                    </TouchableOpacity>
+
+                    {expanded && (
+                        <View style={styles.dropdownContainer}>
+                            {result.substitutes.map((sub, index) => (
+                                <View key={index} style={[styles.substituteCard, index === result.substitutes.length - 1 && styles.lastSubstituteCard]}>
+                                    <View style={styles.substituteHeader}>
+                                        <Text style={styles.substituteName}>{sub.name}</Text>
+                                        {sub.best && <Text style={styles.bestStar}>⭐</Text>}
+                                        <View style={styles.ratioBadge}>
+                                            <Text style={styles.ratioText}>{sub.ratio}</Text>
+                                        </View>
+                                    </View>
+                                    <Text style={styles.substituteDescription}>{sub.description}</Text>
+                                </View>
+                            ))}
+                        </View>
+                    )}
                 </View>
-            ) : !loading && (
+            )}
+
+            {/* Default Categories */}
+            {!result && !loading && (
                 <>
                     {categories.map((category, index) => (
                         <View key={index} style={styles.section}>
@@ -114,7 +141,7 @@ export default function SwapScreen() {
                                 }}>
                                     <View style={styles.cardInfo}>
                                         <Text style={styles.cardName}>{item.name}</Text>
-                                        <Text style={styles.cardSubs}>{item.count} substitutes available</Text>
+                                        <Text style={styles.cardSubs}>Tap to find substitutes</Text>
                                     </View>
                                     <Text style={styles.arrow}>→</Text>
                                 </TouchableOpacity>
@@ -143,17 +170,25 @@ const styles = StyleSheet.create({
     proTipText: { flex: 1 },
     proTipTitle: { fontSize: 15, fontWeight: 'bold', color: '#7c3aed', marginBottom: 4 },
     proTipBody: { fontSize: 13, color: '#6b21a8', lineHeight: 18 },
-    resultCard: { marginHorizontal: 16, marginBottom: 16, backgroundColor: '#fff', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#f5c400' },
-    resultTitle: { fontSize: 16, fontWeight: 'bold', color: '#c8960c', marginBottom: 8 },
-    resultText: { fontSize: 14, color: '#1f2937', lineHeight: 22 },
     section: { paddingHorizontal: 16, marginBottom: 8 },
     sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
     sectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#1f2937' },
     badge: { backgroundColor: '#e5e7eb', borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2 },
     badgeText: { fontSize: 12, color: '#6b7280', fontWeight: '600' },
-    card: { backgroundColor: '#fff', borderRadius: 12, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, borderWidth: 1, borderColor: '#e5e7eb' },
+    card: { backgroundColor: '#fff', borderRadius: 12, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, borderWidth: 3, borderColor: '#9ca3af' },
     cardInfo: { flex: 1 },
     cardName: { fontSize: 16, fontWeight: '600', color: '#1f2937' },
     cardSubs: { fontSize: 13, color: '#6b7280', marginTop: 2 },
-    arrow: { fontSize: 18, color: '#9ca3af' }
+    arrow: { fontSize: 18, color: '#9ca3af' },
+    substitutesContainer: { marginTop: 4, marginBottom: 8 },
+    substituteCard: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 8, borderWidth: 1, borderColor: '#e5e7eb', padding: 16, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
+    substituteHeader: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 6 },
+    substituteName: { fontSize: 16, fontWeight: 'bold', color: '#1f2937' },
+    bestStar: { fontSize: 16 },
+    ratioBadge: { backgroundColor: '#ede9fe', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
+    ratioText: { fontSize: 12, color: '#7c3aed', fontWeight: '500' },
+    substituteDescription: { fontSize: 13, color: '#6b7280', lineHeight: 18 },
+    cardExpanded: { borderBottomLeftRadius: 0, borderBottomRightRadius: 0, borderBottomWidth: 0 },
+    dropdownContainer: { backgroundColor: '#f3f4f6', borderWidth: 2, borderTopWidth: 0, borderColor: '#e5e7eb', paddingTop: 8, borderBottomLeftRadius: 12, borderBottomRightRadius: 12, marginBottom: 8, marginTop: -8 },
+    lastSubstituteCard: { borderBottomWidth: 0 }
 });

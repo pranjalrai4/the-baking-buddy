@@ -30,6 +30,32 @@ def read_root():
 def get_substitution(request: SubstitutionRequest):
     chat_completion = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
-        messages=[{"role": "user", "content": f"I am baking and I don't have {request.ingredient}. What are the best substitutions? Give me the top 3 substitutions with exact ratios and any important notes. Be concise and practical."}]
+        messages=[{"role": "user", "content": f"""I am baking and I don't have {request.ingredient}. 
+        Give me exactly 3 substitutions in this exact JSON format, no other text:
+        {{
+            "substitutes": [
+                {{
+                    "name": "substitute name",
+                    "ratio": "1 egg = 1 tbsp ground flax + 3 tbsp water",
+                    "description": "short description of when to use it",
+                    "best": true
+                }},
+                {{
+                    "name": "substitute name", 
+                    "ratio": "ratio here",
+                    "description": "short description",
+                    "best": false
+                }},
+                {{
+                    "name": "substitute name",
+                    "ratio": "ratio here", 
+                    "description": "short description",
+                    "best": false
+                }}
+            ]
+        }}"""}]
     )
-    return {"substitutions": chat_completion.choices[0].message.content}
+    import json
+    raw = chat_completion.choices[0].message.content
+    clean = raw.replace("```json", "").replace("```", "").strip()
+    return json.loads(clean)
