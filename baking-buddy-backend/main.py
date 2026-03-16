@@ -4,6 +4,9 @@ from pydantic import BaseModel
 from groq import Groq
 from dotenv import load_dotenv
 import os
+from google import genai
+from google.genai import types
+import base64
 
 load_dotenv()
 
@@ -29,7 +32,7 @@ def read_root():
 @app.post("/substitutions")
 def get_substitution(request: SubstitutionRequest):
     chat_completion = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model="meta-llama/llama-4-scout-17b-16e-instruct",
         messages=[{"role": "user", "content": f"""I am baking and I don't have {request.ingredient}. 
         Give me exactly 3 substitutions in this exact JSON format, no other text:
         {{
@@ -96,6 +99,46 @@ def suggest_recipes(request: RecipeRequest):
                 }}
             ]
         }}"""}]
+    )
+    import json
+    raw = chat_completion.choices[0].message.content
+    clean = raw.replace("```json", "").replace("```", "").strip()
+    return json.loads(clean)
+
+class AnalyzeRequest(BaseModel):
+    image_base64: str
+
+@app.post("/analyze-bake")
+def analyze_bake(request: AnalyzeRequest):
+    chat_completion = client.chat.completions.create(
+        model="meta-llama/llama-4-scout-17b-16e-instruct",
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{request.image_base64}"
+                        }
+                    },
+                    {
+                        "type": "text",
+                        "text": """You are an expert baker. Analyze this photo of a baked good and provide feedback in this exact JSON format, no other text:
+                        {
+                            "bake_type": "what was baked",
+                            "overall_score": 8,
+                            "crust": {"score": 8, "feedback": "feedback here"},
+                            "crumb": {"score": 7, "feedback": "feedback here"},
+                            "texture": {"score": 8, "feedback": "feedback here"},
+                            "color": {"score": 9, "feedback": "feedback here"},
+                            "improvements": ["improvement 1", "improvement 2", "improvement 3"],
+                            "positives": ["positive 1", "positive 2"]
+                        }"""
+                    }
+                ]
+            }
+        ]
     )
     import json
     raw = chat_completion.choices[0].message.content

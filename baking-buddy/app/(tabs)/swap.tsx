@@ -1,7 +1,7 @@
 import { View, Text, ScrollView, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useState } from 'react';
 
-const YOUR_IP = '192.168.68.55';
+const YOUR_IP = 'localhost';
 
 const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 
