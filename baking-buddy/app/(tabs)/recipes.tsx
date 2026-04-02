@@ -1,5 +1,5 @@
-import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 
 const YOUR_IP = 'localhost';
@@ -14,6 +14,7 @@ type Recipe = {
 
 export default function RecipesScreen() {
     const { ingredients } = useLocalSearchParams();
+    const router = useRouter();
     const [recipes, setRecipes] = useState<Recipe[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -29,7 +30,6 @@ export default function RecipesScreen() {
         }
     }, [ingredients]);
 
-    
     const fetchRecipes = async (ingredientList: string[]) => {
         setLoading(true);
         setError('');
@@ -40,14 +40,12 @@ export default function RecipesScreen() {
                 body: JSON.stringify({ ingredients: ingredientList }),
             });
             const data = await response.json();
-            console.log('Backend response:', JSON.stringify(data));
             if (data.recipes && Array.isArray(data.recipes)) {
                 setRecipes(data.recipes);
             } else {
                 setError('Could not load recipes. Try again.');
             }
         } catch (e) {
-            console.error(e);
             setError('Could not connect to server. Make sure your backend is running!');
         }
         setLoading(false);
@@ -87,7 +85,13 @@ export default function RecipesScreen() {
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>✨ You Have Everything! ({canMake.length})</Text>
                     {canMake.map((recipe, index) => (
-                        <View key={index} style={styles.recipeCard}>
+                        <TouchableOpacity key={index} style={styles.recipeCard} onPress={() => router.push({
+                            pathname: '/recipe/[id]',
+                            params: {
+                                name: recipe.name,
+                                ingredients: ingredients as string
+                            }
+                        })}>
                             <View style={styles.recipeIcon}>
                                 <Text style={styles.recipeEmoji}>🧁</Text>
                             </View>
@@ -106,7 +110,7 @@ export default function RecipesScreen() {
                                     </View>
                                 </View>
                             </View>
-                        </View>
+                        </TouchableOpacity>
                     ))}
                 </View>
             )}
@@ -116,7 +120,13 @@ export default function RecipesScreen() {
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Almost There ({almostThere.length})</Text>
                     {almostThere.map((recipe, index) => (
-                        <View key={index} style={styles.recipeCard}>
+                        <TouchableOpacity key={index} style={styles.recipeCard} onPress={() => router.push({
+                            pathname: '/recipe/[id]',
+                            params: {
+                                name: recipe.name,
+                                ingredients: ingredients as string
+                            }
+                        })}>
                             <View style={styles.recipeIcon}>
                                 <Text style={styles.recipeEmoji}>🧁</Text>
                             </View>
@@ -134,7 +144,7 @@ export default function RecipesScreen() {
                                 </View>
                                 <Text style={styles.missingText}>Missing: {recipe.missing.join(', ')}</Text>
                             </View>
-                        </View>
+                        </TouchableOpacity>
                     ))}
                 </View>
             )}

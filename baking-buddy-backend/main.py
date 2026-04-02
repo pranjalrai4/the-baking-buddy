@@ -144,3 +144,36 @@ def analyze_bake(request: AnalyzeRequest):
     raw = chat_completion.choices[0].message.content
     clean = raw.replace("```json", "").replace("```", "").strip()
     return json.loads(clean)
+
+class RecipeDetailRequest(BaseModel):
+    name: str
+    ingredients: list[str]
+
+@app.post("/recipe-detail")
+def get_recipe_detail(request: RecipeDetailRequest):
+    ingredients_str = ", ".join(request.ingredients)
+    chat_completion = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[{"role": "user", "content": f"""Give me a full recipe for {request.name} using these available ingredients: {ingredients_str}.
+        Respond in this exact JSON format, no other text:
+        {{
+            "name": "Recipe Name",
+            "description": "one sentence description",
+            "time": "30 min",
+            "difficulty": "Easy",
+            "servings": 12,
+            "ingredients": [
+                {{"amount": "2 cups", "name": "all-purpose flour"}},
+                {{"amount": "1 tsp", "name": "baking powder"}}
+            ],
+            "steps": [
+                {{"step": 1, "instruction": "Preheat oven to 350F"}},
+                {{"step": 2, "instruction": "Mix dry ingredients together"}}
+            ],
+            "tips": ["tip 1", "tip 2"]
+        }}"""}]
+    )
+    import json
+    raw = chat_completion.choices[0].message.content
+    clean = raw.replace("```json", "").replace("```", "").strip()
+    return json.loads(clean)
