@@ -1,6 +1,7 @@
 import { View, Text, ScrollView, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
+import { usePantry } from './pantrycontext';
 
 const PRESET_INGREDIENTS = [
     'Flour', 'Eggs', 'Butter', 'Sugar', 'Milk', 'Vanilla Extract',
@@ -9,12 +10,15 @@ const PRESET_INGREDIENTS = [
 ];
 
 export default function PantryScreen() {
+    const { ingredients: selected, setIngredients: setSelected } = usePantry();
     const router = useRouter();
-    const [selected, setSelected] = useState<string[]>(['Flour', 'Eggs', 'Butter', 'Sugar', 'Vanilla Extract']);
     const [input, setInput] = useState('');
     const [showPresets, setShowPresets] = useState(false);
 
+    
     const addIngredient = (ingredient: string) => {
+        console.log('Adding:', ingredient);
+        console.log('Current selected:', selected);
         if (!ingredient.trim() || selected.includes(ingredient)) return;
         setSelected([...selected, ingredient.trim()]);
         setInput('');

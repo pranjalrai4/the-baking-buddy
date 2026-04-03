@@ -1,5 +1,6 @@
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, Modal } from 'react-native';
 import { useState } from 'react';
+import { usePantry } from './pantrycontext';
 
 type DiaryEntry = {
     id: number;
@@ -21,6 +22,7 @@ export default function DiaryScreen() {
     const [notes, setNotes] = useState('');
     const [hours, setHours] = useState('');
     const [minutes, setMinutes] = useState('');
+    const { totalBaked, setTotalBaked } = usePantry();
 
     const saveEntry = () => {
         if (!name.trim()) return;
@@ -35,6 +37,7 @@ export default function DiaryScreen() {
             notes,
         };
         setEntries([newEntry, ...entries]);
+        setTotalBaked(totalBaked + 1);
         resetForm();
         setModalVisible(false);
     };

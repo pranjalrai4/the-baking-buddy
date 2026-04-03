@@ -1,9 +1,11 @@
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { useEffect, useState } from 'react';
+import { usePantry } from './pantrycontext';
 
 
 export default function HomeScreen() {
     const [tip, setTip] = useState('Loading tip...');
+    const { ingredients, totalBaked, bakesAnalyzed } = usePantry();
 
     useEffect(() => {
         fetch('http://localhost:8000/tip-of-the-day')
@@ -11,7 +13,7 @@ export default function HomeScreen() {
             .then(data => setTip(data.tip))
             .catch(() => setTip('Room temperature ingredients blend more easily! Take butter and eggs out 30 minutes before baking.'));
     }, []);
-    
+
     return (
         <ScrollView style={styles.container}>
             {/* Header */}
@@ -30,15 +32,15 @@ export default function HomeScreen() {
             {/* Stats */}
             <View style={styles.statsRow}>
                 <View style={styles.statCard}>
-                    <Text style={styles.statNumber}>5</Text>
+                    <Text style={styles.statNumber}>{ingredients.length}</Text>
                     <Text style={styles.statLabel}>Pantry Items</Text>
                 </View>
                 <View style={styles.statCard}>
-                    <Text style={styles.statNumber}>3</Text>
-                    <Text style={styles.statLabel}>Recipes Ready</Text>
+                    <Text style={styles.statNumber}>{totalBaked}</Text>
+                    <Text style={styles.statLabel}>Total Baked</Text>
                 </View>
                 <View style={styles.statCard}>
-                    <Text style={styles.statNumber}>12</Text>
+                    <Text style={styles.statNumber}>{bakesAnalyzed}</Text>
                     <Text style={styles.statLabel}>Bakes Analyzed</Text>
                 </View>
             </View>

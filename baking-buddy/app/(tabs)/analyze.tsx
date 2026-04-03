@@ -1,6 +1,7 @@
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
 import { useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
+import { usePantry } from './pantrycontext';
 
 type AnalysisResult = {
     bake_type: string;
@@ -14,6 +15,7 @@ type AnalysisResult = {
 };
 
 export default function AnalyzeScreen() {
+    const { bakesAnalyzed, setBakesAnalyzed } = usePantry();
     const [image, setImage] = useState<string | null>(null);
     const [result, setResult] = useState<AnalysisResult | null>(null);
     const [loading, setLoading] = useState(false);
@@ -39,6 +41,7 @@ export default function AnalyzeScreen() {
     const analyzeBake = async (base64: string) => {
         setLoading(true);
         setResult(null);
+        setBakesAnalyzed(bakesAnalyzed + 1);
         setError('');
         try {
             const response = await fetch(`http://localhost:8000/analyze-bake`, {
