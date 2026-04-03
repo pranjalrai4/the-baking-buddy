@@ -177,3 +177,11 @@ def get_recipe_detail(request: RecipeDetailRequest):
     raw = chat_completion.choices[0].message.content
     clean = raw.replace("```json", "").replace("```", "").strip()
     return json.loads(clean)
+
+@app.get("/tip-of-the-day")
+def get_tip():
+    chat_completion = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[{"role": "user", "content": "Give me one short, practical baking tip for home bakers. Keep it to 1-2 sentences. Be specific and helpful. No intro text, just the tip itself."}]
+    )
+    return {"tip": chat_completion.choices[0].message.content}

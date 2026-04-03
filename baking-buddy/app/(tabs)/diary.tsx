@@ -16,18 +16,20 @@ export default function DiaryScreen() {
     const [modalVisible, setModalVisible] = useState(false);
     const [name, setName] = useState('');
     const [date, setDate] = useState(new Date().toLocaleDateString('en-US'));
-    const [time, setTime] = useState('');
     const [rating, setRating] = useState(5);
     const [recipe, setRecipe] = useState('');
     const [notes, setNotes] = useState('');
+    const [hours, setHours] = useState('');
+    const [minutes, setMinutes] = useState('');
 
     const saveEntry = () => {
         if (!name.trim()) return;
+        const timeStr = `${hours ? hours + 'h ' : ''}${minutes ? minutes + 'min' : ''}`.trim();
         const newEntry: DiaryEntry = {
             id: Date.now(),
             name,
             date,
-            time,
+            time: timeStr,
             rating,
             recipe,
             notes,
@@ -40,11 +42,12 @@ export default function DiaryScreen() {
     const resetForm = () => {
         setName('');
         setDate(new Date().toLocaleDateString('en-US'));
-        setTime('');
+        setHours('');
+        setMinutes('');
         setRating(5);
         setRecipe('');
         setNotes('');
-    };
+    }
 
     const removeEntry = (id: number) => {
         setEntries(entries.filter(e => e.id !== id));
@@ -62,10 +65,13 @@ export default function DiaryScreen() {
         ? (entries.reduce((sum, e) => sum + e.rating, 0) / entries.length).toFixed(1)
         : '0.0';
 
-    const thisMonth = entries.filter(e => {
-        const now = new Date();
-        return e.date.includes(`${now.getMonth() + 1}/${now.getFullYear()}`);
-    }).length;
+    const hoursBaked = entries.reduce((sum, e) => {
+        const match = e.time.match(/(\d+)\s*h/);
+        const mins = e.time.match(/(\d+)\s*min/);
+        const hours = match ? parseInt(match[1]) : 0;
+        const minutes = mins ? parseInt(mins[1]) / 60 : 0;
+        return sum + hours + minutes;
+    }, 0).toFixed(1);
 
     return (
         <ScrollView style={styles.container}>
@@ -87,12 +93,12 @@ export default function DiaryScreen() {
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
                     <Text style={styles.statNumber}>{avgRating}</Text>
-                    <Text style={styles.statLabel}>Avg Rating</Text>
+                    <Text style={styles.statLabel}>Average Rating</Text>
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
-                    <Text style={styles.statNumber}>{thisMonth}</Text>
-                    <Text style={styles.statLabel}>This Month</Text>
+                    <Text style={styles.statNumber}>{hoursBaked}</Text>
+                    <Text style={styles.statLabel}>Hours of Baking</Text>
                 </View>
             </View>
 
@@ -173,13 +179,25 @@ export default function DiaryScreen() {
                                 />
                             </View>
                             <View style={styles.halfField}>
-                                <Text style={styles.fieldLabel}>Time Taken</Text>
+                                <Text style={styles.fieldLabel}>Hours</Text>
                                 <TextInput
                                     style={styles.input}
-                                    placeholder="e.g., 45 min"
+                                    placeholder="e.g., 1"
                                     placeholderTextColor="#aaa"
-                                    value={time}
-                                    onChangeText={setTime}
+                                    value={hours}
+                                    onChangeText={setHours}
+                                    keyboardType="numeric"
+                                />
+                            </View>
+                            <View style={styles.halfField}>
+                                <Text style={styles.fieldLabel}>Minutes</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="e.g., 30"
+                                    placeholderTextColor="#aaa"
+                                    value={minutes}
+                                    onChangeText={setMinutes}
+                                    keyboardType="numeric"
                                 />
                             </View>
                         </View>

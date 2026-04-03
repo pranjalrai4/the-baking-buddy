@@ -1,6 +1,17 @@
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { useEffect, useState } from 'react';
+
 
 export default function HomeScreen() {
+    const [tip, setTip] = useState('Loading tip...');
+
+    useEffect(() => {
+        fetch('http://localhost:8000/tip-of-the-day')
+            .then(res => res.json())
+            .then(data => setTip(data.tip))
+            .catch(() => setTip('Room temperature ingredients blend more easily! Take butter and eggs out 30 minutes before baking.'));
+    }, []);
+    
     return (
         <ScrollView style={styles.container}>
             {/* Header */}
@@ -37,7 +48,7 @@ export default function HomeScreen() {
                 <Text style={styles.tipIcon}>✨</Text>
                 <View style={styles.tipText}>
                     <Text style={styles.tipTitle}>Tip of the Day</Text>
-                    <Text style={styles.tipBody}>Room temperature ingredients blend more easily! Take butter and eggs out 30 minutes before baking.</Text>
+                    <Text style={styles.tipBody}>{tip}</Text>
                 </View>
             </View>
 
